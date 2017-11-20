@@ -61,7 +61,47 @@ public class BinaryTree<T extends Comparable<T>> extends AbstractSet<T> implemen
 
     @Override
     public boolean remove(Object o) {
-        throw new UnsupportedOperationException();
+        if (contains(o)) {
+            T t = (T) o;
+            Node<T> closest = find(t);
+            Node<T> parent = findParent(t);
+            //удаление листа
+            if (closest.left == null && closest.right == null) {
+                if (parent == null)
+                    root = null;
+                else {
+                    if (parent.left == closest) parent.left = null;
+                    else parent.right = null;
+                }
+            } //удаление узла с одним дочерним узлом
+            else if (closest.left == null || closest.right == null) {
+                Node<T> child = (closest.left != null) ? closest.left : closest.right;
+                if (parent == null)
+                    root = closest;
+                else {
+                    if (parent.left == closest) parent.left = child;
+                    else parent.right = child;
+                }
+            } //удаление узла с двумя дочерними узлами
+            else {
+                Node<T> maxNode = max(closest.left);
+                if (parent.left == closest) parent.left = maxNode;
+                else parent.right = maxNode;
+                //найти родителя у maxNode
+                Node<T> newParent = findParent(maxNode.value);
+                if (newParent.left == maxNode) newParent.left = maxNode.left;
+                else newParent.right = maxNode.left;
+                maxNode.left = closest.left;
+                maxNode.right = closest.right;
+            } return true;
+        }
+        else return false;
+    }
+
+    private Node<T> max(Node<T> start) {
+        if (start.right == null)
+            return start;
+        return max(start.right);
     }
 
     @Override
@@ -70,6 +110,27 @@ public class BinaryTree<T extends Comparable<T>> extends AbstractSet<T> implemen
         T t = (T) o;
         Node<T> closest = find(t);
         return closest != null && t.compareTo(closest.value) == 0;
+    }
+
+    private Node<T> findParent (T value) {
+        if (root == null) return null;
+        return findParent(root, value);
+    }
+
+    private Node<T> findParent (Node<T> start, T value) {
+        int comparison = value.compareTo(start.value);
+        if (comparison == 0) {
+            return null;
+        } else if (comparison < 0) {
+            if (start.left == null) return null;
+            else if (value.compareTo(start.left.value) == 0) return start;
+            return findParent(start.left, value);
+        }
+        else {
+            if (start.right == null) return null;
+            else if (value.compareTo(start.right.value) == 0) return start;
+            return findParent(start.right, value);
+        }
     }
 
     private Node<T> find(T value) {
